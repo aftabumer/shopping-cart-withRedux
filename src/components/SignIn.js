@@ -8,6 +8,7 @@ import TextField from "@material-ui/core/TextField";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import { withRouter } from "react-router-dom";
+import fire from "../config/FireBase";
 
 const styles = theme => ({
   card: {
@@ -39,6 +40,38 @@ const styles = theme => ({
 });
 
 class SignIn extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      email: "",
+      password: ""
+    };
+  }
+
+  handleOnChange = event => {
+    this.setState({
+      [event.target.name]: event.target.value
+    });
+  };
+
+  signIn = event => {
+    event.preventDefault();
+    fire
+      .auth()
+      .signInWithEmailAndPassword(this.state.email, this.state.password)
+      .then(userId => {
+        // here we will save userdata in firestore
+        this.goto("/");
+      })
+      .catch(error => {
+        alert("error: ", error)
+        console.log("error: ", error);
+      });
+
+   
+  };
+
   goto = path => {
     this.props.history.push(path);
   };
@@ -63,6 +96,8 @@ class SignIn extends Component {
             autoComplete="email"
             margin="normal"
             variant="filled"
+            value={this.state.email}
+            onChange={this.handleOnChange}
             fullWidth
           />
           <TextField
@@ -70,9 +105,12 @@ class SignIn extends Component {
             label="Password"
             className={classes.textField}
             type="password"
+            name="password"
             autoComplete="current-password"
             margin="normal"
             variant="filled"
+            value={this.state.password}
+            onChange={this.handleOnChange}
             fullWidth
           />
         </CardContent>
@@ -82,13 +120,7 @@ class SignIn extends Component {
             style={{ justifyContent: "space-between" }}
           >
             <div style={{ display: "flex" }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                  this.goto("/AddProducts");
-                }}
-              >
+              <Button variant="contained" color="primary" type="submit" onClick={this.signIn}>
                 Sign In
               </Button>
             </div>

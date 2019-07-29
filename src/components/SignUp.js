@@ -8,6 +8,7 @@ import TextField from "@material-ui/core/TextField";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import { withRouter } from "react-router-dom";
+import fire from "../config/FireBase";
 
 const styles = theme => ({
   card: {
@@ -43,7 +44,45 @@ const styles = theme => ({
 });
 
 class SignUp extends Component {
- 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    };
+  }
+
+  handleOnChnage = event => {
+    this.setState({
+      [event.target.name]: event.target.value
+    });
+  };
+
+  signUp = event => {
+    event.preventDefault();
+    fire
+      .auth()
+      .createUserWithEmailAndPassword(
+        this.state.email,
+        this.state.password,
+      )
+      .then(userId => {
+      this.goto("/");
+
+      })
+      .then(userId => {
+        console.log("userId: ", userId);
+      })
+      .catch(error => {
+        console.log("error: ", error);
+      });
+
+  };
+
   goto = path => {
     this.props.history.push(path);
   };
@@ -68,8 +107,9 @@ class SignUp extends Component {
               id="filled-required"
               label="First Name"
               className={classes.textField}
-              // value={values.name}
-              // onChange={handleChange('name')}
+              name="firstName"
+              value={this.state.firstName}
+              onChange={this.handleOnChnage}
               margin="normal"
               variant="filled"
               fullWidth
@@ -78,8 +118,9 @@ class SignUp extends Component {
               id="filled-required"
               label="Last Name"
               className={classes.textField}
-              // value={values.name}
-              // onChange={handleChange('name')}
+              name="lastName"
+              value={this.state.lastName}
+              onChange={this.handleOnChnage}
               margin="normal"
               variant="filled"
               fullWidth
@@ -90,6 +131,8 @@ class SignUp extends Component {
               className={classes.textField}
               type="email"
               name="email"
+              value={this.state.email}
+              onChange={this.handleOnChnage}
               autoComplete="email"
               margin="normal"
               variant="filled"
@@ -100,6 +143,9 @@ class SignUp extends Component {
               label="Password"
               className={classes.textField}
               type="password"
+              name="password"
+              value={this.state.password}
+              onChange={this.handleOnChnage}
               autoComplete="current-password"
               margin="normal"
               variant="filled"
@@ -110,6 +156,9 @@ class SignUp extends Component {
               label="Confirm Password"
               className={classes.textField}
               type="password"
+              name="confirmPassword"
+              value={this.state.confirmPassword}
+              onChange={this.handleOnChnage}
               autoComplete="current-password"
               margin="normal"
               variant="filled"
@@ -125,9 +174,7 @@ class SignUp extends Component {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => {
-                    this.goto("/");
-                  }}
+                  onClick={this.signUp}
                 >
                   Sign Up
                 </Button>
@@ -136,7 +183,7 @@ class SignUp extends Component {
                 <Button
                   color="secondary"
                   onClick={() => {
-                    this.goto("/");
+                    this.goto("/signIn");
                   }}
                 >
                   I have already account

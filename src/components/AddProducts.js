@@ -11,7 +11,8 @@ import TextField from "@material-ui/core/TextField";
 import purple from "@material-ui/core/colors/purple";
 import Modal from "@material-ui/core/Modal";
 import AddIcon from "@material-ui/icons/Add";
-import InputAdornment from '@material-ui/core/InputAdornment';
+import InputAdornment from "@material-ui/core/InputAdornment";
+import { withRouter } from "react-router-dom";
 
 // function rand() {
 //     return Math.round(Math.random() * 20) - 10;
@@ -70,8 +71,8 @@ const styles = theme => ({
     marginBottom: theme.spacing(3)
   },
   textField: {
-    marginRight: theme.spacing(1),
-  },
+    marginRight: theme.spacing(1)
+  }
 });
 
 const theme = createMuiTheme({
@@ -93,6 +94,10 @@ class AddProducts extends Component {
     this.setState({ open: false });
   };
 
+  goto = path => {
+    this.props.history.push(path);
+  };
+
   render() {
     const { classes } = this.props;
 
@@ -108,8 +113,25 @@ class AddProducts extends Component {
             Add Product
             <AddIcon className={classes.rightIcon} />
           </Button>
-        </div>
 
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginLeft: theme.spacing(3)
+            }}
+          >
+            <Button
+              variant="contained"
+              color="default"
+              className={classes.button}
+              onClick={()=> {this.goto('/SignIn')}}
+            >
+              Sign In
+              <AddIcon className={classes.rightIcon} />
+            </Button>
+          </div>
+        </div>
         <Modal
           aria-labelledby="simple-modal-title"
           aria-describedby="simple-modal-description"
@@ -222,4 +244,4 @@ AddProducts.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(AddProducts);
+export default withRouter(withStyles(styles)(AddProducts));
