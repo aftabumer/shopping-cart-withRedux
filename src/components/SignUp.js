@@ -33,13 +33,19 @@ const styles = theme => ({
     margin: theme.spacing.unit,
     backgroundColor: theme.palette.secondary.main
   },
-  button: {
-    display: "flex"
-    // justifyContent: 'spaceBetween'
-  },
+  // button: {
+  //   display: "flex"
+  //   // justifyContent: 'spaceBetween'
+  // },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1)
+  },
+  spacingLeft: {
+    marginLeft: theme.spacing(10)
+  },
+  spacingRight: {
+    marginRight: theme.spacing(2)
   }
 });
 
@@ -51,8 +57,8 @@ class SignUp extends Component {
       firstName: "",
       lastName: "",
       email: "",
-      password: "",
-      confirmPassword: ""
+      password: ""
+      // confirmPassword: ""
     };
   }
 
@@ -62,25 +68,68 @@ class SignUp extends Component {
     });
   };
 
+  // addSignUpDataInFireStore = event => {
+  //   event.preventDefault();
+
+  //   const db = fire.firestore();
+
+  //   db.settings({
+  //     timestampsInSnapshots: true
+  //   });
+
+  //   db.collection("sign-up")
+  //     .doc()
+  //     .set({
+  //       firstName: this.state.firstName,
+  //       lastName: this.state.lastName,
+  //       email: this.state.email,
+  //       password: this.state.password
+  //       // editStatus:this.state.editStatus
+  //     });
+
+  //   this.signUp(event);
+  // };
+
   signUp = event => {
     event.preventDefault();
     fire
       .auth()
-      .createUserWithEmailAndPassword(
-        this.state.email,
-        this.state.password,
-      )
-      .then(userId => {
-      this.goto("/");
-
-      })
-      .then(userId => {
+      .createUserWithEmailAndPassword(this.state.email, this.state.password)
+      .then(response => {
+        const userId = response.user.uid;
         console.log("userId: ", userId);
+        const db = fire.firestore();
+
+        db.settings({
+          timestampsInSnapshots: true
+        });
+
+        db.collection("sign-up")
+          .doc(userId)
+          .set({
+            firstName: this.state.firstName,
+            lastName: this.state.lastName,
+            email: this.state.email,
+            password: this.state.password
+            // editStatus:this.state.editStatus
+          });
+        alert("SuccessFull Sign Up");
+        this.goto("/");
       })
       .catch(error => {
+        alert("Please fill correct Email & Password", error);
         console.log("error: ", error);
       });
 
+    // const user = fire.auth().currentUser;
+    // user
+    // .sendEmailVerification()
+    // .then(() => {
+    //   alert("verify plx");
+    // })
+    // .catch(error => {
+    //   console.log(error);
+    // });
   };
 
   goto = path => {
@@ -151,7 +200,7 @@ class SignUp extends Component {
               variant="filled"
               fullWidth
             />
-            <TextField
+            {/* <TextField
               id="filled-password-input"
               label="Confirm Password"
               className={classes.textField}
@@ -163,33 +212,26 @@ class SignUp extends Component {
               margin="normal"
               variant="filled"
               fullWidth
-            />
+            /> */}
           </CardContent>
           <CardActions>
-            <div
-              className={classes.button}
-              style={{ justifyContent: "space-between" }}
-            >
-              <div style={{ display: "flex" }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={this.signUp}
-                >
-                  Sign Up
-                </Button>
-              </div>
-              <div style={{ display: "flex" }}>
-                <Button
-                  color="secondary"
-                  onClick={() => {
-                    this.goto("/signIn");
-                  }}
-                >
-                  I have already account
-                </Button>
-              </div>
+            {/* <div style={{ display: "flex", justifyContent: "flex-start" }}> */}
+            <div className={classes.spacingRight}>
+              <Button variant="contained" color="primary" onClick={this.signUp}>
+                Sign Up
+              </Button>
             </div>
+            <div className={classes.spacingLeft}>
+              <Button
+                color="secondary"
+                onClick={() => {
+                  this.goto("/");
+                }}
+              >
+                I have already account
+              </Button>
+            </div>
+            {/* </div> */}
           </CardActions>
         </Card>
       </div>
