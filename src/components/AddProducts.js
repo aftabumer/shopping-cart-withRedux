@@ -10,9 +10,13 @@ import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import purple from "@material-ui/core/colors/purple";
 import Modal from "@material-ui/core/Modal";
+import LockIcon from "@material-ui/icons/Lock";
 import AddIcon from "@material-ui/icons/Add";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import { withRouter } from "react-router-dom";
+import fire from "../config/FireBase";
+import { productAction } from "../store/action/productAction";
+import { connect } from "react-redux";
 
 // function rand() {
 //     return Math.round(Math.random() * 20) - 10;
@@ -82,6 +86,10 @@ const theme = createMuiTheme({
 });
 class AddProducts extends Component {
   state = {
+    name: "",
+    description: "",
+    image: "",
+    price: "",
     open: false,
     setOpen: true
   };
@@ -98,6 +106,57 @@ class AddProducts extends Component {
     this.props.history.push(path);
   };
 
+  signOut = event => {
+    event.preventDefault();
+
+    fire
+      .auth()
+      .signOut()
+      .then(() => {
+        alert("SuccessFull Sign Out ");
+        this.goto("/");
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  addProduct = () => {
+    let { name, description, image, price } = this.state;
+    this.props.addProduct({ name, description, image, price });
+
+    const db = fire.firestore();
+    db.settings({
+      timestampsInSnapshots: true
+    });
+
+    db.collection("products").doc().set({
+      name: name,
+      description: description,
+      image: image,
+      price: price
+    }).then(() => {
+      alert('successfull added')
+    }).catch((error) => {
+      alert('not added')
+    })
+
+    this.setState({
+      name: "",
+      description: "",
+      image: '',
+      price: ""
+    });
+    this.handleClose()
+  };
+
+  handleOnChange = event => {
+    this.setState({
+      [event.target.name]: event.target.value
+    });
+  };
+
+  
   render() {
     const { classes } = this.props;
 
@@ -125,10 +184,10 @@ class AddProducts extends Component {
               variant="contained"
               color="default"
               className={classes.button}
-              onClick={()=> {this.goto('/SignIn')}}
+              onClick={this.signOut}
             >
-              Sign In
-              <AddIcon className={classes.rightIcon} />
+              Sign Out
+              <LockIcon className={classes.rightIcon} />
             </Button>
           </div>
         </div>
@@ -160,10 +219,10 @@ class AddProducts extends Component {
                       className={classes.textField}
                       label="Product Name"
                       type="text"
-                      placeholder="Product title"
-                      name="title"
-                      value={this.props.title}
-                      onChange={this.props.change}
+                      placeholder="Product name"
+                      name="name"
+                      value={this.state.name}
+                      onChange={this.handleOnChange}
                       variant="outlined"
                       id="mui-theme-provider-outlined-input"
                       fullWidth
@@ -177,11 +236,11 @@ class AddProducts extends Component {
                       label="Product Description"
                       type="text"
                       placeholder="Product Description"
-                      name="Description"
+                      name="description"
                       multiline
                       rows="2"
-                      value={this.props.title}
-                      onChange={this.props.change}
+                      value={this.state.description}
+                      onChange={this.handleOnChange}
                       className={classes.textField}
                       variant="outlined"
                       fullWidth
@@ -193,9 +252,11 @@ class AddProducts extends Component {
                     <TextField
                       className={classes.textField}
                       label="Product Image"
-                      type="img"
+                      type="text"
                       placeholder="Product Image"
-                      name="title"
+                      name="image"
+                      value={this.state.image}
+                      onChange={this.handleOnChange}
                       variant="outlined"
                       id="mui-theme-provider-outlined-input"
                       fullWidth
@@ -208,7 +269,10 @@ class AddProducts extends Component {
                     className={classes.textField}
                     variant="outlined"
                     label="Product Amount"
-                    type="number"
+                    type="text"
+                    name="price"
+                    value={this.state.price}
+                    onChange={this.handleOnChange}
                     placeholder="Product Amount"
                     InputProps={{
                       startAdornment: (
@@ -224,10 +288,7 @@ class AddProducts extends Component {
                   color="secondary"
                   fullWidth={true}
                   className={classes.button}
-                  // onClick={e => {
-                  //   this.props.add(e);
-                  //   this.handleClose(e);
-                  // }}
+                  onClick={this.addProduct}
                 >
                   Add Product
                 </Button>
@@ -244,4 +305,21 @@ AddProducts.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withRouter(withStyles(styles)(AddProducts));
+const mapStateToProps = state => {
+  // console.log("view Poducts: ", state.products);
+
+  return {
+    products: state.products
+  };
+};
+const mapDispatchToProps = dispatch => {
+  console.log("dispatch: ", dispatch);
+  return {
+    addProduct: payload => dispatch(productAction.addProduct(payload))
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(withStyles(styles)(AddProducts)));
