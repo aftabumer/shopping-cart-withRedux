@@ -34,8 +34,12 @@ const styles = theme => ({
     backgroundColor: theme.palette.secondary.main
   },
   button: {
-    display: "flex"
-    // justifyContent: 'spaceBetween'
+    display: "flex",
+    // justifyContent: 'spaceBetween'    
+  },
+  spacing: {
+    marginLeft: theme.spacing(22),
+
   }
 });
 
@@ -61,13 +65,18 @@ class SignIn extends Component {
       .auth()
       .signInWithEmailAndPassword(this.state.email, this.state.password)
       .then(userId => {
-        // here we will save userdata in firestore
-        this.goto("/");
+        alert('SuccessFull Sign In')
+        // this.props.senduserId(user)
+        let user = fire.auth().currentUser;    
+    console.log(user.uid);
+        
+        this.goto("/ViewProducts");
       })
       .catch(error => {
-        alert("error: ", error)
+        alert("Please fill correct Email & Password", error)
         console.log("error: ", error);
       });
+
 
    
   };
@@ -124,7 +133,9 @@ class SignIn extends Component {
                 Sign In
               </Button>
             </div>
-            <div style={{ display: "flex" }}>
+    
+            
+            <div className={classes.spacing} style={{ display: "flex"}}>
               <Button
                 color="secondary"
                 onClick={() => {
