@@ -3,27 +3,47 @@ import { withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
-import Button from "@material-ui/core/Button";
+// import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import { withRouter } from "react-router-dom";
 import fire from "../config/FireBase";
+import { productAction } from "../store/action/productAction";
+import { connect } from 'react-redux'
+import { Button } from 'antd';
+import "antd/dist/antd.css";
+
 
 const styles = theme => ({
+  root: {
+    backgroundImage: `url(https://visme.co/blog/wp-content/uploads/2017/07/50-Beautiful-and-Minimalist-Presentation-Backgrounds-029.jpg)`,
+    backgroundPosition: "center",
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    width: "100%",
+    height: "100vh",
+    margin: 0,
+    padding: 0,
+    top: 0,
+    left: 0,
+    position: "absolute"
+  },
   card: {
     margin: "0 auto",
-    position: "relative",
-    top: "25%",
+    position: "absolute",
+    top: "15%",
     left: 0,
     right: 0,
-    bottom: "25%",
     maxWidth: "500px",
-    height: "50%",
+    height: "500px",
     display: "flex",
     justifyItems: "center",
     flexDirection: "column",
-    alignItems: "center"
+    alignItems: "center",
+    marginBottom: theme.spacing(5),
+    backgroundColor: '#c4def6'
+
   },
   cardContext: {
     padding: "5px 50px 5px 50px"
@@ -46,6 +66,10 @@ const styles = theme => ({
   },
   spacingRight: {
     marginRight: theme.spacing(2)
+  },
+  loader: {
+    disableShrink: true,
+    color: 'secondary'
   }
 });
 
@@ -57,7 +81,9 @@ class SignUp extends Component {
       firstName: "",
       lastName: "",
       email: "",
-      password: ""
+      password: "",
+      iconLoading: false,
+
       // confirmPassword: ""
     };
   }
@@ -66,6 +92,10 @@ class SignUp extends Component {
     this.setState({
       [event.target.name]: event.target.value
     });
+  };
+
+  enterIconLoading = () => {
+    this.setState({ iconLoading: true });
   };
 
   // addSignUpDataInFireStore = event => {
@@ -91,12 +121,13 @@ class SignUp extends Component {
   // };
 
   signUp = event => {
+    let userId = ""
     event.preventDefault();
     fire
       .auth()
       .createUserWithEmailAndPassword(this.state.email, this.state.password)
       .then(response => {
-        const userId = response.user.uid;
+        userId  = response.user.uid;
         console.log("userId: ", userId);
         const db = fire.firestore();
 
@@ -114,10 +145,33 @@ class SignUp extends Component {
             // editStatus:this.state.editStatus
           });
         alert("SuccessFull Sign Up");
+        
+      // db.collection("sign-up")
+      //     .get()
+      //     .then(snapshot => {
+      //       snapshot.forEach(doc => {
+      //         let user = doc.data(userId)
+
+      //         const{ firstName, lastName, email} = user;
+      //         this.setState({
+      //           users:
+      //             this.props.signUp(user),
+                  
+      //               firstName: firstName,
+      //               lastName: lastName,
+      //               email:email,
+      //               userId
+                
+      //         })
+      //       })
+      //     })
+        
         this.goto("/");
       })
       .catch(error => {
         alert("Please fill correct Email & Password", error);
+        this.setState({ iconLoading: false });
+
         console.log("error: ", error);
       });
 
@@ -138,8 +192,11 @@ class SignUp extends Component {
 
   render() {
     const { classes } = this.props;
+const isEnabled = this.state.firstName.length > 0 && this.state.lastName.length > 0 && this.state.email.length > 0 && this.state.password.length > 0;
+
     return (
-      <div style={{ paddingTop: "50px" }}>
+
+      <div className={classes.root}>
         <Card className={classes.card}>
           <Avatar className={classes.avatar} style={{ justifyItems: "center" }}>
             <i class="material-icons">lock</i>
@@ -217,7 +274,17 @@ class SignUp extends Component {
           <CardActions>
             {/* <div style={{ display: "flex", justifyContent: "flex-start" }}> */}
             <div className={classes.spacingRight}>
-              <Button variant="contained" color="primary" onClick={this.signUp}>
+              {/* <Button variant="contained" color="primary" disabled = {!isEnabled} onClick={this.signUp}> */}
+            <Button
+                  type="primary"
+                  icon="login"
+                  disabled={!isEnabled}
+                  loading={this.state.iconLoading}
+                  onClick={e => {
+                    this.enterIconLoading();
+                    this.signUp(e);
+                  }}
+                >
                 Sign Up
               </Button>
             </div>
@@ -238,4 +305,26 @@ class SignUp extends Component {
     );
   }
 }
-export default withRouter(withStyles(styles)(SignUp));
+
+const mapStateToProps = state => {
+  console.log('state: ', state.user);
+
+  return{
+    user: state.user
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  console.log('dispatch: ', dispatch);
+  
+  return{
+    signUp: payload => dispatch(productAction.getUserProfile(payload))
+  }
+}
+
+
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(withStyles(styles)(SignUp)));

@@ -13,7 +13,7 @@ import AddProducts from "./AddProducts";
 import purple from "@material-ui/core/colors/purple";
 import Modal from "@material-ui/core/Modal";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import fire from "firebase";
+import TextField from "@material-ui/core/TextField";
 import { productAction } from "../store/action/productAction";
 
 function getModalStyle() {
@@ -30,7 +30,7 @@ function getModalStyle() {
 const styles = theme => {
   return {
     card: {
-      maxWidth: 345,
+      maxWidth: 400,
       maxHeight: 1000,
       padding: theme.spacing(1),
       textAlign: "center",
@@ -57,7 +57,12 @@ class ViewProducts extends Component {
   state = {
     open: false,
     setOpen: true,
+    search: ""
     // products: []
+  };
+
+  onChange = event => {
+    this.setState({ search: event.target.value });
   };
 
   handleOpen = i => {
@@ -71,133 +76,126 @@ class ViewProducts extends Component {
     this.props.history.push(path);
   };
 
-  getProduct() {
-    const db = fire.firestore();
+  // search = () => {
+  //   const {search} = this.state
+  //   const products = this.props.products
+  //   console.log(products)
+  //   const filterProducts = this.props.products.filter( product => {
+  //     return product.name.toUpperCase().indexOf( search.toLowerCase()) !== -1
+  //   })
 
-    db.settings({ timestampsInSnapshots: true });
-
-    db.collection("products")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          let product = doc.data();
-
-          const {
-            description,
-            image,
-            name,
-            price
-          } = product;
-          this.setState({
-            products: [
-              this.props.getProduct(product),
-              {
-                name: name,
-                description: description,
-                price: price,
-                image: image
-              }
-            ]
-          
-          });
-          // console.log(product)
-
-          // let products = this.props.getProduct(product)
-          // // let products = this.state.products;
-          // products.push(product);
-          // console.log("products: ", products);
-          console.log('redux products =>', this.props.products);
-
-        });
-      });
-  }
-
-  componentDidMount() {
-    this.getProduct();
-  }
+  // console.log(filterProducts)
+  // }
   render() {
     const { classes } = this.props;
+
+    let newDataArray = this.props.products.filter(product => {
+      return (
+        product.name.toLowerCase().indexOf(this.state.search.toLowerCase()) !==
+        -1
+      );
+    });
+    // let tempProducts=[];
+    // if(fire.auth().currentUser){
+    //   console.log(fire.auth().currentUser.uid)
+    //   tempProducts = (fire.auth().currentUser.uid)? this.props.myProducts:this.props.products
+
+    // }
+    // const products=this.props.products.map(res=>{})
     return (
       <div>
         <div className={classes.root}>
-          <AddProducts />
-          <Grid container spacing={3}>
-            {this.props.products.map((product, i) => {
-                  // console.log("products", product);
-                  return (
-                    <Grid item xs={3}>
-                      <Card
-                        className={classes.card}
-                        key={i}
-                        onClick={() => {
-                          this.handleOpen(i);
+          <AddProducts showButton={true} />
+          {/* <input label="Search Product" onChange={this.onChange} /> */}
+          <div
+            style={{ display: "flex", justifyContent: "center", flex: "glow" }}
+          >
+            <TextField
+              id="standard-full-width"
+              style={{ marginBottom: "20px", width: "50%" }}
+              placeholder="Search Product"
+              onChange={this.onChange}
+              margin="normal"
+              InputLabelProps={{
+                shrink: true
+              }}
+            />
+            <i
+              class="material-icons"
+              style={{ padding: 0, marginTop: "20px", marginLeft: "5px" }}
+            >
+              search
+            </i>
+          </div>
+
+          <Grid container spacing={2}>
+            {newDataArray.map((product, i) => {
+              return (
+                <Grid item xs={3}>
+                  <Card
+                    className={classes.card}
+                    key={i}
+                    onClick={() => {
+                      this.handleOpen(i);
+                    }}
+                  >
+                    <CardActionArea>
+                      <img
+                        src={product.image}
+                        alt="IMG"
+                        width="280"
+                        height="240"
+                      />
+                      {/* <CardMedia className={classes.media}/> */}
+                      <CardContent
+                        style={{
+                          height: 150,
+                          color: purple
                         }}
                       >
-                        <CardActionArea>
-                          <img
-                            src={product.image}
-                            alt="IMG"
-                            width="345"
-                            height="240"
-                          />
-                          {/* <CardMedia className={classes.media}/> */}
-                          <CardContent
-                            style={{
-                              height: 100,
-                              color: purple
-                            }}
-                          >
-                            <Typography
-                              gutterBottom
-                              variant="h5"
-                              component="h2"
-                              style={{ textTran: "upercase" }}
-                            >
-                              {product.name.toUpperCase()}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="textSecondary"
-                              component="p"
-                            >
-                              {product.description
-                                .split("")
-                                .splice(0, 100)
-                                .join("")}
-                              .............
-                            </Typography>
-                          </CardContent>
-                        </CardActionArea>
-                        <CardActions
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between"
-                          }}
+                        <Typography
+                          gutterBottom
+                          variant="h5"
+                          component="h2"
+                          style={{ textTransform: "uppercase" }}
                         >
-                          <Button
-                            size="small"
-                            color="primary"
-                            onClick={() => {
-                              this.goto("/AddCart");
-                            }}
-                          >
-                            BUY: {product.price}
-                          </Button>
-                          <Button
-                            size="small"
-                            color="primary"
-                            onClick={() => {
-                              this.goto("/AddCart");
-                            }}
-                          >
-                            Steam Key: {product.price}
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  );
-                })
-            }
+                          {product.name}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          component="p"
+                          style={{ textTransform: "capitalize" }}
+                        >
+                          {product.description
+                            .split("")
+                            .splice(0, 100)
+                            .join("")}
+                          .......
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                    <CardActions
+                      style={{
+                        display: "flex",
+                        justifyContent: "center"
+                      }}
+                    >
+                      <Button
+                        size="large"
+                        fullWidth
+                        color="primary"
+                        onClick={() => {
+                          this.goto("/AddCart");
+                        }}
+                      >
+                        Buy: ${product.price}
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
           </Grid>
         </div>
         <Modal
@@ -216,7 +214,7 @@ class ViewProducts extends Component {
                     <img
                       src={product.image}
                       alt="IMG"
-                      width="345"
+                      width="280"
                       height="240"
                     />
                     {/* <CardMedia className={classes.media}/> */}
@@ -240,22 +238,14 @@ class ViewProducts extends Component {
                     }}
                   >
                     <Button
-                      size="small"
+                      size="large"
+                      fullWidth
                       color="primary"
                       onClick={() => {
                         this.goto("/AddCart");
                       }}
                     >
-                      BUY: {product.price}
-                    </Button>
-                    <Button
-                      size="small"
-                      color="primary"
-                      onClick={() => {
-                        this.goto("/AddCart");
-                      }}
-                    >
-                      Steam Key: {product.price}
+                      Buy: ${product.price}
                     </Button>
                   </CardActions>
                 </Card>
@@ -272,7 +262,8 @@ const mapStateToProps = state => {
   // console.log("view Poducts: ", state.products);
 
   return {
-    products: state.products
+    products: state.products,
+    myProducts: state.myProducts
   };
 };
 const mapDispatchToProps = dispatch => {

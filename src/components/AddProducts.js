@@ -10,13 +10,15 @@ import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import purple from "@material-ui/core/colors/purple";
 import Modal from "@material-ui/core/Modal";
-import LockIcon from "@material-ui/icons/Lock";
-import AddIcon from "@material-ui/icons/Add";
-import InputAdornment from "@material-ui/core/InputAdornment";
+import List from "@material-ui/icons/List";
+import ExitToApp from "@material-ui/icons/ExitToApp";
+import PlayListAdd from "@material-ui/icons/PlaylistAdd";
 import { withRouter } from "react-router-dom";
 import fire from "../config/FireBase";
 import { productAction } from "../store/action/productAction";
 import { connect } from "react-redux";
+
+// import InputAdornment from "@material-ui/core/InputAdornment";
 
 // function rand() {
 //     return Math.round(Math.random() * 20) - 10;
@@ -72,7 +74,8 @@ const styles = theme => ({
   },
   button: {
     marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(3)
+    marginBottom: theme.spacing(3),
+    margin: theme.spacing(1)
   },
   textField: {
     marginRight: theme.spacing(1)
@@ -90,6 +93,7 @@ class AddProducts extends Component {
     description: "",
     image: "",
     price: "",
+    userId: "",
     open: false,
     setOpen: true
   };
@@ -129,26 +133,52 @@ class AddProducts extends Component {
     db.settings({
       timestampsInSnapshots: true
     });
+    let userId = fire.auth().currentUser;
 
-    db.collection("products").doc().set({
-      name: name,
-      description: description,
-      image: image,
-      price: price
-    }).then(() => {
-      alert('successfull added')
-    }).catch((error) => {
-      alert('not added')
-    })
+    db.collection("products")
+      .doc()
+      .set({
+        userId: userId.uid,
+        name: name,
+        description: description,
+        image: image,
+        price: price
+      })
+      .then(() => {
+        alert("successfull added");
+      })
+      .catch(error => {
+        alert("not added");
+      });
 
     this.setState({
       name: "",
       description: "",
-      image: '',
+      image: "",
       price: ""
     });
-    this.handleClose()
+    this.handleClose();
   };
+
+  // myProducts = () => {
+  //   const db = fire.firestore();
+  //   const props = this.props;
+  //   console.log(fire.auth().currentUser.uid);
+  //   db.collection("products")
+  //     .where("userId", "==", fire.auth().currentUser.uid)
+  //     .get()
+  //     .then(function(querySnapshot) {
+  //       querySnapshot.forEach(function(doc) {
+  //         // doc.data() is never undefined for query doc snapshots
+  //         console.log(doc.id, " => ", doc.data());
+  //         props.getMyProducts(doc.data());
+  //       });
+  //     })
+  //     .catch(function(error) {
+  //       console.log("Error getting documents: ", error);
+  //       alert('ops no product Add some product')
+  //     });
+  // };
 
   handleOnChange = event => {
     this.setState({
@@ -156,23 +186,37 @@ class AddProducts extends Component {
     });
   };
 
-  
   render() {
-    const { classes } = this.props;
+    const { classes, showButton } = this.props;
 
     return (
       <div>
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="contained"
-            color="default"
-            className={classes.button}
-            onClick={this.handleOpen}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginRight: theme.spacing(2)
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-start"
+            }}
           >
-            Add Product
-            <AddIcon className={classes.rightIcon} />
-          </Button>
-
+          {showButton ? (
+              <Button
+                variant="contained"
+                color="default"
+                disabled={!this.state.setOpen}
+                className={classes.button}
+                onClick={() => this.goto("/MyProducts")}
+              >
+                my product
+                <List className={classes.rightIcon} />
+                </Button>
+          ) : null}
+          </div>
           <div
             style={{
               display: "flex",
@@ -184,10 +228,20 @@ class AddProducts extends Component {
               variant="contained"
               color="default"
               className={classes.button}
+              onClick={this.handleOpen}
+            >
+              Add Product
+              <PlayListAdd className={classes.rightIcon} />
+            </Button>
+
+            <Button
+              variant="contained"
+              color="default"
+              className={classes.button}
               onClick={this.signOut}
             >
               Sign Out
-              <LockIcon className={classes.rightIcon} />
+              <ExitToApp className={classes.rightIcon} />
             </Button>
           </div>
         </div>
@@ -274,11 +328,6 @@ class AddProducts extends Component {
                     value={this.state.price}
                     onChange={this.handleOnChange}
                     placeholder="Product Amount"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">$</InputAdornment>
-                      )
-                    }}
                     fullWidth
                   />
                 </FormControl>
@@ -309,13 +358,16 @@ const mapStateToProps = state => {
   // console.log("view Poducts: ", state.products);
 
   return {
-    products: state.products
+    products: state.products,
+    myProducts: state.myProducts
   };
 };
 const mapDispatchToProps = dispatch => {
-  console.log("dispatch: ", dispatch);
+  // console.log("dispatch: ", dispatch);
+
   return {
-    addProduct: payload => dispatch(productAction.addProduct(payload))
+    addProduct: payload => dispatch(productAction.addProduct(payload)),
+    getMyProducts: payload => dispatch(productAction.getMyProducts(payload))
   };
 };
 
