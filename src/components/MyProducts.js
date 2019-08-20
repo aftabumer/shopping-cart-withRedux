@@ -1,6 +1,6 @@
 import { connect } from "react-redux";
 import React, { Component } from "react";
-import {fade, withStyles } from "@material-ui/core/styles";
+import { fade, withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardActionArea from "@material-ui/core/CardActionArea";
 import CardActions from "@material-ui/core/CardActions";
@@ -11,11 +11,14 @@ import Grid from "@material-ui/core/Grid";
 import { withRouter } from "react-router-dom";
 import AddProducts from "./AddProducts";
 import purple from "@material-ui/core/colors/purple";
+import UpdateProductModal from "./UpdateProductModal";
 import Modal from "@material-ui/core/Modal";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { productAction } from "../store/action/productAction";
+import { notification, Icon } from "antd";
+import "antd/dist/antd.css";
 
-import fire from "firebase";
+import fire, { firestore } from "firebase";
 
 function getModalStyle() {
   const top = 50;
@@ -52,47 +55,47 @@ const styles = theme => {
       flexGrow: 1
     },
     search: {
-        position: 'relative',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: fade(theme.palette.common.white, 0.15),
-        '&:hover': {
-          backgroundColor: fade(theme.palette.common.white, 0.25),
-        },
-        marginRight: theme.spacing(2),
-        marginLeft: 0,
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-          marginLeft: theme.spacing(3),
-          width: 'auto',
-        },
+      position: "relative",
+      borderRadius: theme.shape.borderRadius,
+      backgroundColor: fade(theme.palette.common.white, 0.15),
+      "&:hover": {
+        backgroundColor: fade(theme.palette.common.white, 0.25)
       },
-      searchIcon: {
-        width: theme.spacing(7),
-        height: '100%',
-        position: 'absolute',
-        pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      },
-      inputRoot: {
-        color: 'inherit',
-      },
-      inputInput: {
-        padding: theme.spacing(1, 1, 1, 7),
-        transition: theme.transitions.create('width'),
-        width: '100%',
-        [theme.breakpoints.up('md')]: {
-          width: 200,
-        },
-      },
+      marginRight: theme.spacing(2),
+      marginLeft: 0,
+      width: "100%",
+      [theme.breakpoints.up("sm")]: {
+        marginLeft: theme.spacing(3),
+        width: "auto"
+      }
+    },
+    searchIcon: {
+      width: theme.spacing(7),
+      height: "100%",
+      position: "absolute",
+      pointerEvents: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    inputRoot: {
+      color: "inherit"
+    },
+    inputInput: {
+      padding: theme.spacing(1, 1, 1, 7),
+      transition: theme.transitions.create("width"),
+      width: "100%",
+      [theme.breakpoints.up("md")]: {
+        width: 200
+      }
+    }
   };
 };
 
 class MyProducts extends Component {
   state = {
     open: false,
-    setOpen: true
+    setOpen: true,
     // products: []
   };
 
@@ -110,9 +113,9 @@ class MyProducts extends Component {
   myProducts = () => {
     const db = fire.firestore();
     const props = this.props;
-    console.log('myProducts: ')
+    console.log("myProducts: ");
     if (fire.auth().currentUser) {
-      console.log('myProducts: ')
+      console.log("myProducts: ");
       console.log(fire.auth().currentUser.uid);
 
       db.collection("products")
@@ -136,20 +139,60 @@ class MyProducts extends Component {
     this.myProducts();
   }
 
-  deleteProduct = () => {
-    const db = fire.firestore()
-    db.collection("products").doc("userId").delete().then(function() {
-      console.log("Document successfully deleted!");
-  }).catch(function(error) {
-      console.error("Error removing document: ", error);
-  });
-  }
+  deleteProduct = (index, product) => {
+    // this.props.deleteProduct(index);
+    // let id = fire.auth().currentUser
+    // let pid = id.uid
+    // console.log(pid)
+    const db = fire.firestore();
+    const props = this.props;
+    const id = product.toString();
+    db.collection("products")
+      .doc(id)
+      .delete()
+      .then(() => {
+        props.deleteProduct(index);
+        this.productDeleteSuccess();
+        console.log("Document successfully deleted!", product);
+      })
+      .catch(function(error) {
+        console.error("Error removing document: ", error);
+      });
+
+    // let documentRef = fire.firestore().doc('products/c9caeb80-c297-11e9-a3fb-3fd6f9896f68');
+
+    // documentRef.delete().then(() => {
+    //   console.log('Document successfully deleted.', product);
+    // });
+  };
+
+  productDeleteSuccess = () => {
+    notification.open({
+      message: "Product Successfuly Deleted  ",
+      icon: <Icon type="check-circle" style={{ color: "#108ee9" }} />
+    });
+  };
+  productDeleteError = type => {
+    notification[type]({
+      message: "Error in Deleted",
+      description: "Please check your Product are avalible or not"
+    });
+  };
+  handleOpen = (product) => {
+    this.setState({ open: true, product});
+    
+  };
+
+  handleClose = () => {
+    this.setState({ open: false });
+  };
 
   render() {
     const { classes } = this.props;
+
     let tempProducts = [];
     if (fire.auth().currentUser) {
-      console.log(fire.auth().currentUser.uid);
+      // console.log(fire.auth().currentUser.uid);
       tempProducts = fire.auth().currentUser.uid
         ? this.props.myProducts
         : alert("noo products");
@@ -157,21 +200,21 @@ class MyProducts extends Component {
     // const products=this.props.products.map(res=>{})
     return (
       <div>
+        <UpdateProductModal
+          open={this.state.open}
+          handleClose={this.handleClose}
+          product={this.state.product}
+        />
         <AddProducts showButton={false} />
         <div className={classes.root}>
           {/* <button onClick={this.myProducts}>my products</button> */}
           <Grid container spacing={2}>
             {tempProducts.map((product, i) => {
+              // console.log(product);
               return (
                 <Grid item xs={3}>
-                  <Card
-                    className={classes.card}
-                    key={i}
-                    onClick={() => {
-                      this.handleOpen(i);
-                    }}
-                  >
-                    
+                  <Card className={classes.card} key={i}>
+                    <Button onClick={()=>{this.handleOpen(product)}}>edit</Button>
                     <CardActionArea>
                       <img
                         src={product.image}
@@ -204,7 +247,7 @@ class MyProducts extends Component {
                             .split("")
                             .splice(0, 100)
                             .join("")}
-                          .......
+                          <strong> .....</strong>
                         </Typography>
                       </CardContent>
                     </CardActionArea>
@@ -225,67 +268,19 @@ class MyProducts extends Component {
                         Buy: ${product.price}
                       </Button>
                     </CardActions>
+                    <Button
+                      onClick={index => {
+                        this.deleteProduct(index, product.uuid);
+                      }}
+                    >
+                      delete
+                    </Button>
                   </Card>
                 </Grid>
               );
             })}
           </Grid>
         </div>
-        <Modal
-          aria-labelledby="simple-modal-title"
-          aria-describedby="simple-modal-description"
-          open={this.state.open}
-          onClose={this.handleClose}
-        >
-          <div style={getModalStyle()} className={classes.modal}>
-            <CssBaseline />
-
-            {tempProducts.map((product, i) =>
-              this.state.index === i ? (
-                <Card className={classes.card} key={i}>
-                  <CardActionArea>
-                    <img
-                      src={product.image}
-                      alt="IMG"
-                      width="280"
-                      height="240"
-                    />
-                    {/* <CardMedia className={classes.media}/> */}
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="h2">
-                        {product.name.toUpperCase()}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        component="p"
-                      >
-                        {product.description}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                  <CardActions
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Button
-                      size="large"
-                      fullWidth
-                      color="primary"
-                      onClick={() => {
-                        this.goto("/AddCart");
-                      }}
-                    >
-                      Buy: ${product.price}
-                    </Button>
-                  </CardActions>
-                </Card>
-              ) : null
-            )}
-          </div>
-        </Modal>
       </div>
     );
   }
@@ -303,7 +298,8 @@ const mapDispatchToProps = dispatch => {
   console.log("dispatch: ", dispatch);
   return {
     addProduct: payload => dispatch(productAction.addProduct(payload)),
-    getMyProducts: payload => dispatch(productAction.getMyProducts(payload))
+    getMyProducts: payload => dispatch(productAction.getMyProducts(payload)),
+    deleteProduct: payload => dispatch(productAction.deleteProduct(payload))
   };
 };
 

@@ -171,7 +171,8 @@ class ViewProducts extends Component {
                             .split("")
                             .splice(0, 100)
                             .join("")}
-                          .......
+                          <strong> .....</strong>
+                        
                         </Typography>
                       </CardContent>
                     </CardActionArea>

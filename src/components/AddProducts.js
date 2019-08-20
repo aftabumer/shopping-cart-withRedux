@@ -17,6 +17,9 @@ import { withRouter } from "react-router-dom";
 import fire from "../config/FireBase";
 import { productAction } from "../store/action/productAction";
 import { connect } from "react-redux";
+import { notification, Icon } from "antd";
+import "antd/dist/antd.css";
+import uuid from "uuid";
 
 // import InputAdornment from "@material-ui/core/InputAdornment";
 
@@ -76,6 +79,7 @@ const styles = theme => ({
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(3),
     margin: theme.spacing(1)
+    
   },
   textField: {
     marginRight: theme.spacing(1)
@@ -94,6 +98,7 @@ class AddProducts extends Component {
     image: "",
     price: "",
     userId: "",
+    uuid: '',
     open: false,
     setOpen: true
   };
@@ -118,7 +123,7 @@ class AddProducts extends Component {
       .signOut()
       .then(() => {
         alert("SuccessFull Sign Out ");
-        this.goto("/");
+        this.goto("/SignIn");
       })
       .catch(error => {
         console.log(error);
@@ -128,27 +133,28 @@ class AddProducts extends Component {
   addProduct = () => {
     let { name, description, image, price } = this.state;
     this.props.addProduct({ name, description, image, price });
-
+    const uuid = require('uuid/v1')
     const db = fire.firestore();
     db.settings({
       timestampsInSnapshots: true
     });
     let userId = fire.auth().currentUser;
-
+    let pid = uuid()
     db.collection("products")
-      .doc()
+      .doc(pid)
       .set({
         userId: userId.uid,
         name: name,
         description: description,
         image: image,
-        price: price
+        price: price,
+        uuid: pid
       })
       .then(() => {
-        alert("successfull added");
+        this.productAddSuccess()
       })
       .catch(error => {
-        alert("not added");
+        this.productAddError()
       });
 
     this.setState({
@@ -186,8 +192,28 @@ class AddProducts extends Component {
     });
   };
 
+  productAddSuccess = () => {
+    notification.open({
+      message: "Product Successfuly Added  ",
+      icon: <Icon type="check-circle" style={{ color: "#108ee9" }} />
+    });
+  };
+  productAddError = type => {
+    notification[type]({
+      message: "Add Product Error ",
+      description: "Please check your Product details"
+    });
+  };
+
+
+
   render() {
     const { classes, showButton } = this.props;
+    const isEnabled =
+      this.state.name.length > 0 &&
+      this.state.image.length > 0 &&
+      this.state.description.length > 0 &&
+      this.state.price.length > 0;
 
     return (
       <div>
@@ -335,8 +361,9 @@ class AddProducts extends Component {
                 <Button
                   variant="contained"
                   color="secondary"
+                  disabled= {!isEnabled}
                   fullWidth={true}
-                  className={classes.button}
+                  className={classes.form}
                   onClick={this.addProduct}
                 >
                   Add Product

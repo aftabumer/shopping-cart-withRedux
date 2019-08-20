@@ -4,15 +4,16 @@ import {
   GET_CURRENT_USER,
   GET_USER_PROFILE,
   GET_MY_PRODUCTS,
-  SEARCH_PRODUCT
+  DELETE_PRODUCT,
+  UPDATE_PRODUCT
 } from "./../constant";
 import { product } from "../../assets/products";
 
 const initialState = {
   products: product,
-  searchProduct: '',
+  searchProduct: "",
   user: {},
-  myProducts:[]
+  myProducts: []
   // getProductsLoader: false,
   // getProductsError: false
 };
@@ -35,10 +36,10 @@ export default function productReducer(state = initialState, action) {
         user: action.payload
       };
     case GET_USER_PROFILE:
-      return{
+      return {
         ...state,
         user: action.payload
-      }
+      };
 
     case GET_MY_PRODUCTS:
       return {
@@ -46,19 +47,20 @@ export default function productReducer(state = initialState, action) {
         myProducts: [...state.myProducts, action.payload]
       };
 
-    case SEARCH_PRODUCT: {
-      const { searchProduct } = action.payload
+    case DELETE_PRODUCT: {
       return {
         ...state,
-        searchProduct: searchProduct,
-        products: searchProduct
-          ? product.filter(
-              products =>
-                products.name
-                  .toLowerCase()
-                  .indexOf(searchProduct.toLowerCase()) > -1
-            )
-          : product
+        myProducts: [
+          ...state.myProducts.splice(0, action.payload),
+          ...state.myProducts.splice(1)
+        ]
+      };
+    }
+
+    case UPDATE_PRODUCT: {
+      return {
+        ...state,
+        myProducts: [...state.myProducts, action.payload]
       };
     }
 
