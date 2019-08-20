@@ -1,17 +1,24 @@
-import React, { Component } from "react";
+import React, { Component, useCallback, useContext } from "react";
 import { withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import TextField from "@material-ui/core/TextField";
 import Avatar from "@material-ui/core/Avatar";
+import Visibility from "@material-ui/icons/Visibility";
+import IconButton from "@material-ui/core/IconButton";
+import VisibilityOff from "@material-ui/icons/VisibilityOff";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import clsx from "clsx";
 import Typography from "@material-ui/core/Typography";
-import { withRouter } from "react-router-dom";
+import { withRouter, Redirect } from "react-router-dom";
 import fire from "../config/FireBase";
 import { productAction } from "../store/action/productAction";
 import { connect } from "react-redux";
-import { Button, notification, Icon } from 'antd';
+import { Button, notification, Icon } from "antd";
 import "antd/dist/antd.css";
+import { AuthContext } from "./Auth";
+
 
 const styles = theme => ({
   root: {
@@ -67,9 +74,12 @@ class SignIn extends Component {
     this.state = {
       email: "",
       password: "",
+      showPassword: false,
       iconLoading: false
     };
   }
+
+
 
   handleOnChange = event => {
     this.setState({
@@ -81,17 +91,20 @@ class SignIn extends Component {
     this.setState({ iconLoading: true });
   };
 
+  handleClickShowPassword = () => {
+    this.setState({ showPassword: !this.state.showPassword });
+  };
+
   signInSuccess = () => {
     notification.open({
-      message: 'Sign In Success ',
-      icon: <Icon type="check-circle" style={{ color: '#108ee9' }} />,
+      message: "Sign In Success ",
+      icon: <Icon type="check-circle" style={{ color: "#108ee9" }} />
     });
   };
   signInError = type => {
     notification[type]({
-      message: 'Sign In Error ',
-      description:
-        'Please check your Email and Password',
+      message: "Sign In Error ",
+      description: "Please check your Email and Password"
     });
   };
 
@@ -107,7 +120,7 @@ class SignIn extends Component {
         // this.props.senduserId(user)
         // let user = this.props.user
         // user.fire.firestore().userId
-        this.signInSuccess()
+        this.signInSuccess();
 
         userId = response.user.uid;
         console.log("userId =>", userId);
@@ -156,28 +169,58 @@ class SignIn extends Component {
         //   })
         // })
 
-        this.goto("/ViewProducts");
+        this.goto("/");
       })
       .catch(error => {
         this.setState({ iconLoading: false });
-        this.signInError('warning')
+        this.signInError("warning");
         // alert("Please fill correct Email & Password", error);
-        this.setState({email: '', password: ''})
+        this.setState({ email: "", password: "" });
 
         console.log("error: ", error);
       });
+
+      
   };
+
+  componentDidMount() {
+    fire.auth().onAuthStateChanged(function(user) {
+      if (user) {
+    
+        console.log('current user: ', user)
+      } else {
+        // No user is signed in.
+        console.log('No user')
+  
+      }
+    })
+  }
 
   goto = path => {
     this.props.history.push(path);
   };
+
+// componentDidMount() {
+//   fire.auth().onAuthStateChanged(function(user) {
+//     if (user) {
+//       // User is signed in.
+//       console.log('current user: ', user)
+//     } else {
+//       // No user is signed in.
+//     }
+//   });
+// }
+
+
+
+
 
   render() {
     const { classes } = this.props;
     // const { email, password } = this.state;
     const isEnabled =
       this.state.email.length > 0 && this.state.password.length > 0;
-
+      
     return (
       <div className={classes.root}>
         {/* <img src="https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/EVeDgMMCximbyooji/red-3d-hearts-flying-valentines-day-background-full-hd_rlgkv7hxwl_thumbnail-full01.png" alt="Cinque Terre" width="100%" height= '650px' position= 'absolute'  /> */}
@@ -208,16 +251,34 @@ class SignIn extends Component {
               fullWidth
             />
             <TextField
-              id="filled-password-input"
+              id="filled-adornment-password"
               label="Password"
-              className={classes.textField}
-              type="password"
+              className={clsx(classes.textField)}
+              type={this.state.showPassword ? "text" : "password"}
               name="password"
               autoComplete="current-password"
               margin="normal"
               variant="filled"
               value={this.state.password}
               onChange={this.handleOnChange}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      aria-label="toggle password visibility"
+                      onClick={this.handleClickShowPassword}
+                      onMouseDown={this.handleMouseDownPassword}
+                    >
+                      {this.state.showPassword ? (
+                        <Visibility />
+                      ) : (
+                        <VisibilityOff />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
               fullWidth
             />
           </CardContent>
@@ -276,7 +337,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    setUserDataInRedux: payload => dispatch(productAction.getCurrentUser(payload))
+    setUserDataInRedux: payload =>
+      dispatch(productAction.getCurrentUser(payload))
   };
 };
 
