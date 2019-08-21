@@ -16,6 +16,8 @@ import Modal from "@material-ui/core/Modal";
 import { connect } from "react-redux";
 import { productAction } from "../store/action/productAction";
 import fire from "../config/FireBase";
+import { notification, Icon } from "antd";
+import "antd/dist/antd.css";
 
 function getModalStyle() {
   const top = 50;
@@ -125,21 +127,22 @@ class UpdateProductModal extends Component {
 
   abcd = () => {
     db.collection("products")
-      .doc('4H09lrUw4rAkezwCubCk')
+      .doc("4H09lrUw4rAkezwCubCk")
       .update({
-        description: 'adsadsadsdsadsadasdsadsadsadsadas_11'
-      }).then(()=>{
-        alert('updated product')
-      }).catch(error => {
-        alert('eorro on update => ', error)
+        description: "adsadsadsdsadsadasdsadsadsadsadas_11"
       })
-
-  }
+      .then(() => {
+        alert("updated product");
+      })
+      .catch(error => {
+        alert("eorro on update => ", error);
+      });
+  };
 
   updateProduct = () => {
     let { name, description, image, price, userId, uuid } = this.state;
     let product = this.props.product;
-    console.log(product.uuid)
+    console.log(product.uuid);
     db.collection("products")
       .doc(product.uuid)
       .set({
@@ -149,21 +152,64 @@ class UpdateProductModal extends Component {
         image: image,
         price: price,
         uuid: uuid
-      }).then(()=>{
-        console.log(name,userId,description,image,price,uuid)
-        alert('updated product')
-      }).catch(error => {
-        alert('eorro on update => ', error)
       })
+      .then(() => {
+        // console.log(name,userId,description,image,price,uuid)
+        this.productUpdateSuccess()
+        
+        const props = this.props;
+        console.log("myProducts: ");
+        if (fire.auth().currentUser) {
+          console.log("myProducts: ");
+          console.log(fire.auth().currentUser.uid);
 
-      this.setState({
-        name: "",
-        description: "",
-        image: "",
-        price: ""
+          db.collection("products")
+            .where("userId", "==", fire.auth().currentUser.uid)
+            .get()
+            .then(function(querySnapshot) {
+              querySnapshot.forEach(function(doc) {
+                // doc.data() is never undefined for query doc snapshots
+                console.log(doc.id, " => ", doc.data());
+                props.getMyProducts(doc.data());
+              });
+            })
+            .catch(function(error) {
+              console.log("Error getting documents: ", error);
+              alert("ops no product Add some product");
+            });
+        }
+
+
+
+
+      })
+      .catch(() => {
+        this.productUpdateError()
+       
       });
-     this.props.handleClose()
+
+    this.setState({
+      name: "",
+      description: "",
+      image: "",
+      price: ""
+    });
+    this.props.handleClose();
   };
+
+  productUpdateSuccess = () => {
+    notification.open({
+      message: "Product Successfuly Added  ",
+      icon: <Icon type="check-circle" style={{ color: "#108ee9" }} />
+    });
+  };
+  productUpdateError = type => {
+    notification[type]({
+      message: "Add Product Error ",
+      description: "Please check your Product details"
+    });
+  };
+
 
   render() {
     const { open, handleClose, product, classes } = this.props;
@@ -277,7 +323,9 @@ class UpdateProductModal extends Component {
                 disabled={!isEnabled}
                 fullWidth={true}
                 className={classes.form}
-                onClick={()=>{this.updateProduct()}}
+                onClick={() => {
+                  this.updateProduct();
+                }}
               >
                 Update Product
               </Button>
@@ -301,7 +349,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    updateProduct: payload => dispatch(productAction.updateProduct(payload))
+    updateProduct: payload => dispatch(productAction.updateProduct(payload)),
+    getMyProducts: payload => dispatch(productAction.getMyProducts(payload))
   };
 };
 export default connect(

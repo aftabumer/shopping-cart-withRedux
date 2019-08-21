@@ -152,6 +152,29 @@ class AddProducts extends Component {
       })
       .then(() => {
         this.productAddSuccess()
+
+        const db = fire.firestore();
+    const props = this.props;
+    console.log("myProducts: ");
+    if (fire.auth().currentUser) {
+      console.log("myProducts: ");
+      console.log(fire.auth().currentUser.uid);
+
+      db.collection("products")
+        .where("userId", "==", fire.auth().currentUser.uid)
+        .get()
+        .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+            // doc.data() is never undefined for query doc snapshots
+            console.log(doc.id, " => ", doc.data());
+            props.getMyProducts(doc.data());
+          });
+        })
+        .catch(function(error) {
+          console.log("Error getting documents: ", error);
+          alert("ops no product Add some product");
+        });
+    }
       })
       .catch(error => {
         this.productAddError()
@@ -394,6 +417,7 @@ const mapDispatchToProps = dispatch => {
 
   return {
     addProduct: payload => dispatch(productAction.addProduct(payload)),
+    getMyProducts: payload => dispatch(productAction.getMyProducts(payload)),    
     getMyProducts: payload => dispatch(productAction.getMyProducts(payload))
   };
 };

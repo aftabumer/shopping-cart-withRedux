@@ -204,8 +204,9 @@ class MyProducts extends Component {
           open={this.state.open}
           handleClose={this.handleClose}
           product={this.state.product}
-        />
+          />
         <AddProducts showButton={false} />
+          <h1>my own product</h1>
         <div className={classes.root}>
           {/* <button onClick={this.myProducts}>my products</button> */}
           <Grid container spacing={2}>
