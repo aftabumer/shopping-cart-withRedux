@@ -14,9 +14,9 @@ import ExitToApp from "@material-ui/icons/ExitToApp";
 import PlayListAdd from "@material-ui/icons/PlaylistAdd";
 import Modal from "@material-ui/core/Modal";
 import { connect } from "react-redux";
-
 import { productAction } from "../store/action/productAction";
 import fire from "../config/FireBase";
+
 function getModalStyle() {
   const top = 50;
   const left = 50;
@@ -27,6 +27,7 @@ function getModalStyle() {
     transform: `translate(-${top}%, -${left}%)`
   };
 }
+const db = fire.firestore();
 
 const styles = theme => ({
   main: {
@@ -97,6 +98,21 @@ class UpdateProductModal extends Component {
     };
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.product !== this.props.product) {
+      let product = this.props.product;
+
+      this.setState({
+        name: product.name,
+        description: product.description,
+        image: product.image,
+        price: product.price,
+        userId: product.userId,
+        uuid: product.uuid
+      });
+    }
+  }
+
   handleOnChange = event => {
     this.setState({
       [event.target.name]: event.target.value
@@ -107,7 +123,47 @@ class UpdateProductModal extends Component {
     this.setState({ open: false });
   };
 
-  updateProduct = () => {};
+  abcd = () => {
+    db.collection("products")
+      .doc('4H09lrUw4rAkezwCubCk')
+      .update({
+        description: 'adsadsadsdsadsadasdsadsadsadsadas_11'
+      }).then(()=>{
+        alert('updated product')
+      }).catch(error => {
+        alert('eorro on update => ', error)
+      })
+
+  }
+
+  updateProduct = () => {
+    let { name, description, image, price, userId, uuid } = this.state;
+    let product = this.props.product;
+    console.log(product.uuid)
+    db.collection("products")
+      .doc(product.uuid)
+      .set({
+        name: name,
+        userId: userId,
+        description: description,
+        image: image,
+        price: price,
+        uuid: uuid
+      }).then(()=>{
+        console.log(name,userId,description,image,price,uuid)
+        alert('updated product')
+      }).catch(error => {
+        alert('eorro on update => ', error)
+      })
+
+      this.setState({
+        name: "",
+        description: "",
+        image: "",
+        price: ""
+      });
+     this.props.handleClose()
+  };
 
   render() {
     const { open, handleClose, product, classes } = this.props;
@@ -117,7 +173,7 @@ class UpdateProductModal extends Component {
       this.state.image.length > 0 &&
       this.state.description.length > 0 &&
       this.state.price.length > 0;
-    console.log(product);
+
     // let tempProducts = [];
     // if (fire.auth().currentUser) {
     //   // console.log(fire.auth().currentUser.uid);
@@ -221,7 +277,7 @@ class UpdateProductModal extends Component {
                 disabled={!isEnabled}
                 fullWidth={true}
                 className={classes.form}
-                onClick={this.updateProduct}
+                onClick={()=>{this.updateProduct()}}
               >
                 Update Product
               </Button>
